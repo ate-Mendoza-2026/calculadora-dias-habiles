@@ -1,57 +1,302 @@
+```html
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
 <meta charset="UTF-8">
-<title>Calculadora de días hábiles</title>
+<title>Calculadora de Plazos Administrativos</title>
+
+<style>
+
+body{
+font-family: Arial;
+background:#ffffff;
+display:flex;
+justify-content:center;
+padding:40px;
+}
+
+.card{
+background:#F0F9CF;
+width:420px;
+padding:30px;
+border-radius:10px;
+box-shadow:0 0 10px rgba(0,0,0,0.1);
+}
+
+h1{
+color:#000000;
+font-size:22px;
+text-align:center;
+margin-bottom:25px;
+}
+
+label{
+display:block;
+margin-top:15px;
+font-size:14px;
+}
+
+input{
+width:100%;
+padding:10px;
+border-radius:6px;
+border:1px solid #ccc;
+margin-top:5px;
+}
+
+.radio{
+margin-top:15px;
+}
+
+button{
+width:100%;
+padding:12px;
+margin-top:20px;
+background:#38B000;
+color:#ffffff;
+border:none;
+border-radius:6px;
+font-size:16px;
+cursor:pointer;
+}
+
+button:hover{
+background:#2f9400;
+}
+
+.result{
+margin-top:25px;
+background:#ffffff;
+padding:20px;
+border-radius:8px;
+}
+
+.result h2{
+font-size:32px;
+margin:5px 0;
+}
+
+.detail{
+font-size:14px;
+margin-top:10px;
+}
+
+.audit{
+margin-top:20px;
+max-height:200px;
+overflow:auto;
+display:none;
+font-size:13px;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+}
+
+td,th{
+border-bottom:1px solid #ddd;
+padding:6px;
+text-align:left;
+}
+
+.print{
+background:#000000;
+margin-top:10px;
+}
+
+</style>
 </head>
 
 <body>
 
-<h1>Calculadora de días hábiles</h1>
+<div class="card">
 
-<label>Fecha inicial:</label>
+<h1>Calculadora de Plazos Administrativos</h1>
+
+<label>Fecha inicial</label>
 <input type="date" id="fechaInicio">
 
-<br><br>
-
-<label>Cantidad de días:</label>
+<label>Cantidad de días</label>
 <input type="number" id="dias">
 
-<br><br>
+<div class="radio">
+<input type="radio" name="tipo" value="corridos"> Corridos
+<input type="radio" name="tipo" value="habiles" checked> Hábiles
+</div>
 
-<button onclick="calcular()">Calcular</button>
+<button onclick="calcular()">Calcular fecha</button>
 
-<h2 id="resultado"></h2>
+<div class="result">
+
+<div>Fecha resultante</div>
+<h2 id="resultado">--/--/----</h2>
+
+<div id="condicion"></div>
+
+<div class="detail" id="detalle"></div>
+
+<button onclick="toggleAuditoria()">Mostrar auditoría</button>
+
+<div class="audit" id="auditoria"></div>
+
+<button class="print" onclick="window.print()">Imprimir / Guardar PDF</button>
+
+</div>
+
+</div>
 
 <script>
 
+/* =======================
+FERIADOS ARGENTINA
+======================= */
+
+const feriados = {
+
+"2025":[
+"2025-01-01",
+"2025-03-03",
+"2025-03-04",
+"2025-03-24",
+"2025-04-02",
+"2025-04-18",
+"2025-05-01",
+"2025-05-25",
+"2025-06-20",
+"2025-07-09",
+"2025-07-25",
+"2025-12-08",
+"2025-12-25"
+],
+
+"2026":[
+"2026-01-01",
+"2026-02-16",
+"2026-02-17",
+"2026-03-24",
+"2026-04-02",
+"2026-04-03",
+"2026-05-01",
+"2026-05-25",
+"2026-06-20",
+"2026-07-09",
+"2026-07-25",
+"2026-12-08",
+"2026-12-25"
+]
+
+};
+
+/* =======================
+FUNCIONES
+======================= */
+
+function esFeriado(fecha){
+
+let y = fecha.getFullYear();
+let f = fecha.toISOString().split("T")[0];
+
+if(feriados[y]){
+return feriados[y].includes(f);
+}
+
+return false;
+
+}
+
 function calcular(){
 
-let fechaInicio = new Date(document.getElementById("fechaInicio").value);
+let inicio = new Date(document.getElementById("fechaInicio").value);
 let dias = parseInt(document.getElementById("dias").value);
+let tipo = document.querySelector('input[name="tipo"]:checked').value;
 
-let contador = 0;
+let fecha = new Date(inicio);
+
+let contador=0;
+
+let sabados=0;
+let domingos=0;
+let feriadosCount=0;
+
+let auditoriaHTML="<table><tr><th>Fecha</th><th>Estado</th></tr>";
 
 while(contador < dias){
 
-fechaInicio.setDate(fechaInicio.getDate()+1);
+fecha.setDate(fecha.getDate()+1);
 
-let dia = fechaInicio.getDay();
+let diaSemana = fecha.getDay();
+let fechaStr = fecha.toLocaleDateString();
 
-if(dia != 0 && dia != 6){
+if(tipo==="corridos"){
+
 contador++;
+auditoriaHTML+=`<tr><td>${fechaStr}</td><td>Contado</td></tr>`;
+
+}else{
+
+if(esFeriado(fecha)){
+feriadosCount++;
+auditoriaHTML+=`<tr><td>${fechaStr}</td><td>Feriado (excluido)</td></tr>`;
+continue;
 }
+
+if(diaSemana===6){
+sabados++;
+auditoriaHTML+=`<tr><td>${fechaStr}</td><td>Sábado (excluido)</td></tr>`;
+continue;
+}
+
+if(diaSemana===0){
+domingos++;
+auditoriaHTML+=`<tr><td>${fechaStr}</td><td>Domingo (excluido)</td></tr>`;
+continue;
+}
+
+contador++;
+auditoriaHTML+=`<tr><td>${fechaStr}</td><td>Contado</td></tr>`;
 
 }
 
-document.getElementById("resultado").innerText =
-"Fecha final: " + fechaInicio.toLocaleDateString();
+}
+
+auditoriaHTML+="</table>";
+
+document.getElementById("resultado").innerText = fecha.toLocaleDateString();
+
+document.getElementById("condicion").innerText =
+dias+" días "+tipo;
+
+document.getElementById("detalle").innerHTML = `
+<b>Detalle del cálculo</b><br>
+Feriados: ${feriadosCount}<br>
+Sábados: ${sabados}<br>
+Domingos: ${domingos}
+`;
+
+document.getElementById("auditoria").innerHTML = auditoriaHTML;
+
+}
+
+/* =======================
+AUDITORIA
+======================= */
+
+function toggleAuditoria(){
+
+let a = document.getElementById("auditoria");
+
+if(a.style.display==="none"){
+a.style.display="block";
+}else{
+a.style.display="none";
+}
 
 }
 
 </script>
 
 </body>
-
 </html>
+```
+
