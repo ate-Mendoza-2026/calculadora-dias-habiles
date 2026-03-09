@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+<meta charset="UTF-8">
+<title>Calculadora de días hábiles</title>
+</head>
+
+<body>
+
+<h1>Calculadora de días hábiles</h1>
+
+<label>Fecha inicial:</label>
+<input type="date" id="fechaInicio">
+
+<br><br>
+
+<label>Cantidad de días:</label>
+<input type="number" id="dias">
+
+<br><br>
+
+<button onclick="calcular()">Calcular</button>
+
+<h2 id="resultado"></h2>
+
+<script>
+
+function calcular(){
+
+let fechaInicio = new Date(document.getElementById("fechaInicio").value);
+let dias = parseInt(document.getElementById("dias").value);
+
+let contador = 0;
+
+while(contador < dias){
+
+fechaInicio.setDate(fechaInicio.getDate()+1);
+
+let dia = fechaInicio.getDay();
+
+if(dia != 0 && dia != 6){
+contador++;
+}
+
+}
+
+document.getElementById("resultado").innerText =
+"Fecha final: " + fechaInicio.toLocaleDateString();
+
+}
+
+</script>
+
+</body>
+
+</html>
