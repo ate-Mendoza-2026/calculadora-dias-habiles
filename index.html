@@ -8,32 +8,35 @@
 <style>
 
 body{
-font-family: Arial;
+font-family: system-ui, Arial;
 background:#ffffff;
 display:flex;
 justify-content:center;
 padding:40px;
 }
 
+.container{
+width:420px;
+}
+
 .card{
 background:#F0F9CF;
-width:420px;
-padding:30px;
-border-radius:10px;
-box-shadow:0 0 10px rgba(0,0,0,0.1);
+padding:28px;
+border-radius:12px;
+box-shadow:0 8px 18px rgba(0,0,0,0.08);
 }
 
 h1{
-color:#000000;
-font-size:22px;
 text-align:center;
+font-size:20px;
 margin-bottom:25px;
+color:#000;
 }
 
 label{
-display:block;
-margin-top:15px;
 font-size:14px;
+display:block;
+margin-top:14px;
 }
 
 input{
@@ -42,50 +45,72 @@ padding:10px;
 border-radius:6px;
 border:1px solid #ccc;
 margin-top:5px;
+font-size:14px;
 }
 
-.radio{
-margin-top:15px;
+.radio-group{
+margin-top:16px;
+display:flex;
+gap:20px;
 }
 
 button{
 width:100%;
 padding:12px;
-margin-top:20px;
-background:#38B000;
-color:#ffffff;
 border:none;
 border-radius:6px;
-font-size:16px;
+font-size:15px;
 cursor:pointer;
+margin-top:18px;
 }
 
-button:hover{
-background:#2f9400;
+.btn-calcular{
+background:#38B000;
+color:white;
+}
+
+.btn-calcular:hover{
+background:#2f9800;
+}
+
+.btn-auditoria{
+background:#38B000;
+color:white;
+}
+
+.btn-print{
+background:#000;
+color:#fff;
 }
 
 .result{
-margin-top:25px;
-background:#ffffff;
-padding:20px;
+margin-top:20px;
+background:#fff;
+padding:18px;
 border-radius:8px;
 }
 
-.result h2{
-font-size:32px;
-margin:5px 0;
+.result-title{
+font-size:13px;
+color:#555;
 }
 
-.detail{
-font-size:14px;
+.result-date{
+font-size:32px;
+font-weight:700;
+margin-top:4px;
+}
+
+.detalle{
 margin-top:10px;
+font-size:14px;
 }
 
 .audit{
-margin-top:20px;
+display:none;
+margin-top:15px;
 max-height:200px;
 overflow:auto;
-display:none;
 font-size:13px;
 }
 
@@ -94,21 +119,18 @@ width:100%;
 border-collapse:collapse;
 }
 
-td,th{
+th,td{
 border-bottom:1px solid #ddd;
 padding:6px;
 text-align:left;
-}
-
-.print{
-background:#000000;
-margin-top:10px;
 }
 
 </style>
 </head>
 
 <body>
+
+<div class="container">
 
 <div class="card">
 
@@ -120,27 +142,29 @@ margin-top:10px;
 <label>Cantidad de días</label>
 <input type="number" id="dias">
 
-<div class="radio">
-<input type="radio" name="tipo" value="corridos"> Corridos
-<input type="radio" name="tipo" value="habiles" checked> Hábiles
+<div class="radio-group">
+<label><input type="radio" name="tipo" value="corridos"> Corridos</label>
+<label><input type="radio" name="tipo" value="habiles" checked> Hábiles</label>
 </div>
 
-<button onclick="calcular()">Calcular fecha</button>
+<button class="btn-calcular" onclick="calcular()">Calcular fecha</button>
 
 <div class="result">
 
-<div>Fecha resultante</div>
-<h2 id="resultado">--/--/----</h2>
+<div class="result-title">Fecha resultante</div>
+<div class="result-date" id="resultado">--/--/----</div>
 
 <div id="condicion"></div>
 
-<div class="detail" id="detalle"></div>
+<div class="detalle" id="detalle"></div>
 
-<button onclick="toggleAuditoria()">Mostrar auditoría</button>
+</div>
+
+<button class="btn-auditoria" onclick="toggleAuditoria()">Mostrar auditoría</button>
 
 <div class="audit" id="auditoria"></div>
 
-<button class="print" onclick="window.print()">Imprimir / Guardar PDF</button>
+<button class="btn-print" onclick="window.print()">Imprimir / Guardar PDF</button>
 
 </div>
 
@@ -149,7 +173,7 @@ margin-top:10px;
 <script>
 
 /* =======================
-FERIADOS ARGENTINA
+FERIADOS
 ======================= */
 
 const feriados = {
@@ -189,7 +213,7 @@ const feriados = {
 };
 
 /* =======================
-FUNCIONES
+UTILIDADES
 ======================= */
 
 function esFeriado(fecha){
@@ -205,6 +229,10 @@ return false;
 
 }
 
+/* =======================
+CALCULO
+======================= */
+
 function calcular(){
 
 let inicio = new Date(document.getElementById("fechaInicio").value);
@@ -214,53 +242,52 @@ let tipo = document.querySelector('input[name="tipo"]:checked').value;
 let fecha = new Date(inicio);
 
 let contador=0;
-
 let sabados=0;
 let domingos=0;
 let feriadosCount=0;
 
-let auditoriaHTML="<table><tr><th>Fecha</th><th>Estado</th></tr>";
+let auditoria="<table><tr><th>Fecha</th><th>Estado</th></tr>";
 
 while(contador < dias){
 
 fecha.setDate(fecha.getDate()+1);
 
-let diaSemana = fecha.getDay();
+let dia = fecha.getDay();
 let fechaStr = fecha.toLocaleDateString();
 
 if(tipo==="corridos"){
 
 contador++;
-auditoriaHTML+=`<tr><td>${fechaStr}</td><td>Contado</td></tr>`;
+auditoria+=`<tr><td>${fechaStr}</td><td>Contado</td></tr>`;
 
 }else{
 
 if(esFeriado(fecha)){
 feriadosCount++;
-auditoriaHTML+=`<tr><td>${fechaStr}</td><td>Feriado (excluido)</td></tr>`;
+auditoria+=`<tr><td>${fechaStr}</td><td>Feriado (excluido)</td></tr>`;
 continue;
 }
 
-if(diaSemana===6){
+if(dia===6){
 sabados++;
-auditoriaHTML+=`<tr><td>${fechaStr}</td><td>Sábado (excluido)</td></tr>`;
+auditoria+=`<tr><td>${fechaStr}</td><td>Sábado (excluido)</td></tr>`;
 continue;
 }
 
-if(diaSemana===0){
+if(dia===0){
 domingos++;
-auditoriaHTML+=`<tr><td>${fechaStr}</td><td>Domingo (excluido)</td></tr>`;
+auditoria+=`<tr><td>${fechaStr}</td><td>Domingo (excluido)</td></tr>`;
 continue;
 }
 
 contador++;
-auditoriaHTML+=`<tr><td>${fechaStr}</td><td>Contado</td></tr>`;
+auditoria+=`<tr><td>${fechaStr}</td><td>Contado</td></tr>`;
 
 }
 
 }
 
-auditoriaHTML+="</table>";
+auditoria+="</table>";
 
 document.getElementById("resultado").innerText = fecha.toLocaleDateString();
 
@@ -268,13 +295,12 @@ document.getElementById("condicion").innerText =
 dias+" días "+tipo;
 
 document.getElementById("detalle").innerHTML = `
-<b>Detalle del cálculo</b><br>
 Feriados: ${feriadosCount}<br>
 Sábados: ${sabados}<br>
 Domingos: ${domingos}
 `;
 
-document.getElementById("auditoria").innerHTML = auditoriaHTML;
+document.getElementById("auditoria").innerHTML = auditoria;
 
 }
 
@@ -284,13 +310,9 @@ AUDITORIA
 
 function toggleAuditoria(){
 
-let a = document.getElementById("auditoria");
+let a=document.getElementById("auditoria");
 
-if(a.style.display==="none"){
-a.style.display="block";
-}else{
-a.style.display="none";
-}
+a.style.display = a.style.display==="block" ? "none" : "block";
 
 }
 
@@ -299,4 +321,3 @@ a.style.display="none";
 </body>
 </html>
 ```
-
