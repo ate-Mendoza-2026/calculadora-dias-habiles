@@ -35,12 +35,15 @@
         .excluido { color: #d90429; font-weight: 500; }
         .contado { color: #38B000; font-weight: 500; }
 
+        .disclaimer { margin-top: 20px; font-size: 0.75rem; color: #666; line-height: 1.4; border-top: 1px solid #ccc; padding-top: 10px; text-align: justify; }
+
         @media print {
             .no-print, button, .radio-group, input, label, select { display: none !important; }
             body { background: white; padding: 0; }
             .card { box-shadow: none; border: none; width: 100%; background: white !important; }
             .result { display: block !important; border: 1px solid #ccc; margin-bottom: 20px; }
             .audit { display: block !important; max-height: none; overflow: visible; }
+            .disclaimer { border: none; font-size: 0.7rem; }
         }
     </style>
 </head>
@@ -54,7 +57,7 @@
             <div class="input-group">
                 <label>Ámbito del cálculo (Feriados)</label>
                 <select id="jurisdiccion">
-                    <option value="mendoza">Provincia de Mendoza</option>
+                    <option value="mendoza">Provincia de Mendoza (Incluye 25 de Julio)</option>
                     <option value="nacional">Nacional (Argentina)</option>
                 </select>
             </div>
@@ -87,6 +90,10 @@
             <button class="btn-auditoria no-print" onclick="toggleAudit()">Ver detalle paso a paso</button>
             <div class="audit" id="panelAudit"></div>
             <button class="btn-print no-print" onclick="window.print()">Imprimir o Guardar PDF</button>
+            
+            <div class="disclaimer">
+                <strong>Nota:</strong> Esta herramienta es de carácter <strong>informativo y orientativo</strong>. El cálculo se realiza conforme a la normativa vigente y el calendario oficial de feriados. Se recomienda al usuario verificar el vencimiento con el Boletín Oficial. El uso de este sistema no sustituye el control profesional de los plazos legales.
+            </div>
         </div>
     </div>
 </div>
@@ -142,7 +149,7 @@
         const tipo = document.querySelector('input[name="tipo"]:checked').value;
 
         if (!fInput || !dInput || dInput <= 0) {
-            alert("⚠️ Por favor, ingresa datos válidos.");
+            alert("⚠️ Por favor, ingresa una fecha y una cantidad de días válida.");
             return;
         }
 
@@ -165,7 +172,7 @@
 
             if (tipo === "corridos") {
                 cont++;
-                logs.push(`<li>${label}: <span class="contado">Contado</span></li>`);
+                logs.push(`<li>${label}: <span class="contado">Contado (Corrido)</span></li>`);
             } else {
                 if (ds === 0) { dom++; logs.push(`<li>${label}: <span class="excluido">Omitido (Domingo)</span></li>`); }
                 else if (ds === 6) { sab++; logs.push(`<li>${label}: <span class="excluido">Omitido (Sábado)</span></li>`); }
@@ -174,7 +181,7 @@
                     logs.push(`<li>${label}: <span class="excluido">Omitido (${feriado.n})</span></li>`);
                 } else {
                     cont++;
-                    logs.push(`<li>${label}: <span class="contado">Contado</span></li>`);
+                    logs.push(`<li>${label}: <span class="contado">Contado (Día Hábil)</span></li>`);
                 }
             }
         }
@@ -183,11 +190,12 @@
         document.getElementById("controlesExtra").style.display = "block";
         document.getElementById("txtResultado").innerText = fecha.toLocaleDateString('es-AR');
         document.getElementById("txtDetalle").innerHTML = `
-            <strong>Ámbito feriados:</strong> ${jur === 'mendoza' ? 'Provincial (Mendoza)' : 'Nacional'}<br>
-            <strong>Excluidos:</strong> ${sab} Sáb, ${dom} Dom, ${fer} Feriados/Asuetos.
+            <strong>Resumen del cómputo:</strong><br>
+            Plazo: ${diasASumar} días ${tipo}.<br>
+            Excluidos: ${sab} Sáb, ${dom} Dom, ${fer} Feriados/Puentes.
         `;
         document.getElementById("panelAudit").innerHTML = `
-            <p><strong>Cómputo desde notificación (${fechaNotif.toLocaleDateString('es-AR')}):</strong></p>
+            <p><strong>Detalle paso a paso (Notificado el ${fechaNotif.toLocaleDateString('es-AR')}):</strong></p>
             <ul>${logs.join('')}</ul>
         `;
     }
