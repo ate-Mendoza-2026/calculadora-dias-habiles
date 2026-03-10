@@ -3,20 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculadora de Plazos Administrativos - Mendoza</title>
+    <title>Calculadora de Plazos Administrativos</title>
     <style>
-        :root { --primary: #38B000; --dark: #1b4332; }
+        :root { --primary: #38B000; --dark: #1b4332; --accent: #008000; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #fdfdfd; display: flex; justify-content: center; padding: 20px; color: #333; }
         .container { width: 100%; max-width: 500px; }
         .card { background: #F0F9CF; padding: 30px; border-radius: 16px; box-shadow: 0 8px 30px rgba(0,0,0,0.1); border: 1px solid #d4e3a3; }
         h1 { text-align: center; font-size: 1.3rem; margin-bottom: 25px; color: #000; font-weight: 800; text-transform: uppercase; line-height: 1.2; }
         
         .input-group { margin-bottom: 15px; }
-        label { font-size: 0.9rem; font-weight: bold; display: block; margin-bottom: 5px; color: var(--dark); }
-        input[type="date"], input[type="number"] { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #bccca3; font-size: 1rem; box-sizing: border-box; }
+        label { font-size: 0.85rem; font-weight: bold; display: block; margin-bottom: 5px; color: var(--dark); }
+        select, input[type="date"], input[type="number"] { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #bccca3; font-size: 1rem; box-sizing: border-box; background: white; }
         
         .radio-group { display: flex; gap: 15px; background: rgba(255,255,255,0.5); padding: 15px; border-radius: 8px; margin: 20px 0; border: 1px dashed var(--primary); }
-        .radio-group label { margin: 0; cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: normal; }
+        .radio-group label { margin: 0; cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: normal; font-size: 0.9rem; }
         
         button { width: 100%; padding: 15px; border: none; border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer; transition: 0.2s; margin-bottom: 10px; }
         .btn-calcular { background: var(--primary); color: white; box-shadow: 0 4px 0 #2d8a00; }
@@ -36,12 +36,11 @@
         .contado { color: #38B000; font-weight: 500; }
 
         @media print {
-            .no-print, button, .radio-group, input, label { display: none !important; }
+            .no-print, button, .radio-group, input, label, select { display: none !important; }
             body { background: white; padding: 0; }
             .card { box-shadow: none; border: none; width: 100%; background: white !important; }
             .result { display: block !important; border: 1px solid #ccc; margin-bottom: 20px; }
             .audit { display: block !important; max-height: none; overflow: visible; }
-            h1 { font-size: 1.5rem; margin-bottom: 40px; }
         }
     </style>
 </head>
@@ -49,9 +48,17 @@
 
 <div class="container">
     <div class="card">
-        <h1>Calculadora de Plazos Administrativos de la Provincia de Mendoza</h1>
+        <h1 id="titulo">Calculadora de Plazos Administrativos</h1>
 
         <div class="no-print">
+            <div class="input-group">
+                <label>Jurisdicción</label>
+                <select id="jurisdiccion" onchange="actualizarTitulo()">
+                    <option value="mendoza">Provincia de Mendoza</option>
+                    <option value="nacional">Nacional (Argentina)</option>
+                </select>
+            </div>
+
             <div class="input-group">
                 <label>Fecha de Notificación</label>
                 <input type="date" id="fechaInicio">
@@ -85,54 +92,63 @@
 </div>
 
 <script>
-    // Mapeo de feriados con sus nombres (Nacionales y Mendoza)
     const FERIADOS_DATA = {
-        "2025-01-01": "Año Nuevo",
-        "2025-03-03": "Carnaval",
-        "2025-03-04": "Carnaval",
-        "2025-03-24": "Día de la Memoria",
-        "2025-04-02": "Día del Veterano y de los Caídos en la Guerra de Malvinas",
-        "2025-04-18": "Viernes Santo",
-        "2025-05-01": "Día del Trabajador",
-        "2025-05-25": "Revolución de Mayo",
-        "2025-06-16": "Paso a la Inmortalidad de Güemes",
-        "2025-06-20": "Día de la Bandera",
-        "2025-07-09": "Día de la Independencia",
-        "2025-07-25": "Santo Patrono Santiago (Mendoza)",
-        "2025-08-15": "Paso a la Inmortalidad de San Martín (Trasladado)",
-        "2025-08-17": "Paso a la Inmortalidad de San Martín",
-        "2025-10-12": "Día del Respeto a la Diversidad Cultural",
-        "2025-11-24": "Día de la Soberanía Nacional",
-        "2025-12-08": "Inmaculada Concepción",
-        "2025-12-25": "Navidad",
-        "2025-12-24": "Asueto Administrativo",
-        "2025-12-31": "Asueto Administrativo",
-        // 2026
-        "2026-01-01": "Año Nuevo",
-        "2026-03-23": "Feriado con fines turísticos",
-        "2026-03-24": "Día de la Memoria",
-        "2026-04-02": "Día de las Malvinas",
-        "2026-04-03": "Viernes Santo",
-        "2026-05-01": "Día del Trabajador",
-        "2026-05-25": "Revolución de Mayo",
-        "2026-06-15": "Paso a la Inmortalidad de Güemes",
-        "2026-06-20": "Día de la Bandera",
-        "2026-07-09": "Día de la Independencia",
-        "2026-07-25": "Santo Patrono Santiago (Mendoza)",
-        "2026-08-17": "Paso a la Inmortalidad de San Martín",
-        "2026-10-12": "Día de la Diversidad Cultural",
-        "2026-11-23": "Día de la Soberanía Nacional",
-        "2026-12-08": "Inmaculada Concepción",
-        "2026-12-25": "Navidad"
+        // Nacionales 2025
+        "2025-01-01": { nombre: "Año Nuevo", tipo: "nacional" },
+        "2025-03-03": { nombre: "Carnaval", tipo: "nacional" },
+        "2025-03-04": { nombre: "Carnaval", tipo: "nacional" },
+        "2025-03-24": { nombre: "Día de la Memoria", tipo: "nacional" },
+        "2025-04-02": { nombre: "Día de Malvinas", tipo: "nacional" },
+        "2025-04-18": { nombre: "Viernes Santo", tipo: "nacional" },
+        "2025-05-01": { nombre: "Día del Trabajador", tipo: "nacional" },
+        "2025-05-25": { nombre: "Revolución de Mayo", tipo: "nacional" },
+        "2025-06-16": { nombre: "Paso a la Inmortalidad de Güemes", tipo: "nacional" },
+        "2025-06-20": { nombre: "Día de la Bandera", tipo: "nacional" },
+        "2025-07-09": { nombre: "Día de la Independencia", tipo: "nacional" },
+        "2025-07-25": { nombre: "Santo Patrono Santiago", tipo: "mendoza" },
+        "2025-08-15": { nombre: "Paso a la Inmortalidad de San Martín (Trasl.)", tipo: "nacional" },
+        "2025-08-17": { nombre: "Paso a la Inmortalidad de San Martín", tipo: "nacional" },
+        "2025-10-12": { nombre: "Día de la Diversidad Cultural", tipo: "nacional" },
+        "2025-11-24": { nombre: "Día de la Soberanía Nacional", tipo: "nacional" },
+        "2025-12-08": { nombre: "Inmaculada Concepción", tipo: "nacional" },
+        "2025-12-25": { nombre: "Navidad", tipo: "nacional" },
+        "2025-12-24": { nombre: "Asueto Administrativo", tipo: "nacional" },
+        "2025-12-31": { nombre: "Asueto Administrativo", tipo: "nacional" },
+        // Nacionales 2026
+        "2026-01-01": { nombre: "Año Nuevo", tipo: "nacional" },
+        "2026-03-23": { nombre: "Feriado Turístico", tipo: "nacional" },
+        "2026-03-24": { nombre: "Día de la Memoria", tipo: "nacional" },
+        "2026-04-02": { nombre: "Día de Malvinas", tipo: "nacional" },
+        "2026-04-03": { nombre: "Viernes Santo", tipo: "nacional" },
+        "2026-05-01": { nombre: "Día del Trabajador", tipo: "nacional" },
+        "2026-05-25": { nombre: "Revolución de Mayo", tipo: "nacional" },
+        "2026-06-15": { nombre: "Paso a la Inmortalidad de Güemes", tipo: "nacional" },
+        "2026-06-20": { nombre: "Día de la Bandera", tipo: "nacional" },
+        "2026-07-09": { nombre: "Día de la Independencia", tipo: "nacional" },
+        "2026-07-25": { nombre: "Santo Patrono Santiago", tipo: "mendoza" },
+        "2026-08-17": { nombre: "Paso a la Inmortalidad de San Martín", tipo: "nacional" },
+        "2026-10-12": { nombre: "Día de la Diversidad Cultural", tipo: "nacional" },
+        "2026-11-23": { nombre: "Día de la Soberanía Nacional", tipo: "nacional" },
+        "2026-12-08": { nombre: "Inmaculada Concepción", tipo: "nacional" },
+        "2026-12-25": { nombre: "Navidad", tipo: "nacional" }
     };
 
+    function actualizarTitulo() {
+        const jur = document.getElementById("jurisdiccion").value;
+        const titulo = document.getElementById("titulo");
+        titulo.innerText = jur === "mendoza" 
+            ? "Calculadora de Plazos Administrativos - Mendoza" 
+            : "Calculadora de Plazos Administrativos - Nacional";
+    }
+
     function ejecutarCalculo() {
+        const jur = document.getElementById("jurisdiccion").value;
         const fInput = document.getElementById("fechaInicio").value;
         const dInput = document.getElementById("dias").value;
         const tipo = document.querySelector('input[name="tipo"]:checked').value;
 
         if (!fInput || !dInput || dInput <= 0) {
-            alert("⚠️ Por favor, ingresa una fecha válida y una cantidad de días mayor a 0.");
+            alert("⚠️ Ingresa fecha y días válidos.");
             return;
         }
 
@@ -146,50 +162,43 @@
 
         while (cont < diasASumar) {
             fecha.setDate(fecha.getDate() + 1);
-            let diaSemana = fecha.getDay(); 
+            let ds = fecha.getDay(); 
             let iso = fecha.toISOString().split('T')[0];
             let label = fecha.toLocaleDateString('es-AR');
 
+            let feriado = FERIADOS_DATA[iso];
+            // Filtro: si es nacional se cuenta siempre, si es de mendoza solo si la jurisd. es mendoza
+            let esFeriadoValido = feriado && (feriado.tipo === "nacional" || (feriado.tipo === "mendoza" && jur === "mendoza"));
+
             if (tipo === "corridos") {
                 cont++;
-                logs.push(`<li>${label}: <span class="contado">Contado (Corrido)</span></li>`);
+                logs.push(`<li>${label}: <span class="contado">Contado</span></li>`);
             } else {
-                if (diaSemana === 0) {
-                    dom++;
-                    logs.push(`<li>${label}: <span class="excluido">Omitido (Domingo)</span></li>`);
-                } else if (diaSemana === 6) {
-                    sab++;
-                    logs.push(`<li>${label}: <span class="excluido">Omitido (Sábado)</span></li>`);
-                } else if (FERIADOS_DATA[iso]) {
+                if (ds === 0) { dom++; logs.push(`<li>${label}: <span class="excluido">Omitido (Domingo)</span></li>`); }
+                else if (ds === 6) { sab++; logs.push(`<li>${label}: <span class="excluido">Omitido (Sábado)</span></li>`); }
+                else if (esFeriadoValido) {
                     fer++;
-                    logs.push(`<li>${label}: <span class="excluido">Omitido (Feriado: ${FERIADOS_DATA[iso]})</span></li>`);
+                    logs.push(`<li>${label}: <span class="excluido">Omitido (${feriado.nombre})</span></li>`);
                 } else {
                     cont++;
-                    logs.push(`<li>${label}: <span class="contado">Contado (Día Hábil)</span></li>`);
+                    logs.push(`<li>${label}: <span class="contado">Contado</span></li>`);
                 }
             }
         }
 
         document.getElementById("panelResultado").style.display = "block";
         document.getElementById("controlesExtra").style.display = "block";
-        
         document.getElementById("txtResultado").innerText = fecha.toLocaleDateString('es-AR');
-        document.getElementById("txtDetalle").innerHTML = `
-            <strong>Resumen del cómputo:</strong><br>
-            Plazo de ${diasASumar} días ${tipo}.<br>
-            Se excluyeron ${sab} sábados, ${dom} domingos y ${fer} feriados/asuetos.
-        `;
-        
-        document.getElementById("panelAudit").innerHTML = `
-            <p><strong>Detalle paso a paso (Notificado el ${fechaNotif.toLocaleDateString('es-AR')}):</strong></p>
-            <ul>${logs.join('')}</ul>
-        `;
+        document.getElementById("txtDetalle").innerHTML = `Jurisdicción: ${jur.toUpperCase()}<br>Excluidos: ${sab} Sáb, ${dom} Dom, ${fer} Feriados.`;
+        document.getElementById("panelAudit").innerHTML = `<ul>${logs.join('')}</ul>`;
     }
 
     function toggleAudit() {
         const p = document.getElementById("panelAudit");
         p.style.display = (p.style.display === "block") ? "none" : "block";
     }
+    
+    actualizarTitulo(); // Inicializar título
 </script>
 
 </body>
