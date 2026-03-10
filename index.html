@@ -1,364 +1,98 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<title>Calculadora de Plazos Administrativos</title>
-
-<style>
-
-body{
-font-family: Arial, sans-serif;
-background:#FFFFFF;
-display:flex;
-justify-content:center;
-padding:40px;
-}
-
-.container{
-width:420px;
-}
-
-.card{
-background:#F0F9CF;
-padding:28px;
-border-radius:12px;
-box-shadow:0 6px 16px rgba(0,0,0,0.08);
-}
-
-h1{
-text-align:center;
-font-size:20px;
-margin-bottom:24px;
-color:#000000;
-}
-
-label{
-font-size:14px;
-display:block;
-margin-top:14px;
-}
-
-input{
-width:100%;
-padding:10px;
-border-radius:6px;
-border:1px solid #ccc;
-margin-top:5px;
-font-size:14px;
-}
-
-.radio-group{
-margin-top:16px;
-display:flex;
-gap:20px;
-}
-
-button{
-width:100%;
-padding:12px;
-border:none;
-border-radius:6px;
-font-size:15px;
-cursor:pointer;
-margin-top:18px;
-}
-
-.btn-calcular{
-background:#38B000;
-color:#FFFFFF;
-}
-
-.btn-calcular:hover{
-background:#2e9300;
-}
-
-.btn-auditoria{
-background:#38B000;
-color:#FFFFFF;
-}
-
-.btn-print{
-background:#000000;
-color:#FFFFFF;
-}
-
-.result{
-margin-top:20px;
-background:#FFFFFF;
-padding:18px;
-border-radius:8px;
-}
-
-.result-title{
-font-size:13px;
-color:#555;
-}
-
-.result-date{
-font-size:30px;
-font-weight:700;
-margin-top:4px;
-}
-
-.detalle{
-margin-top:10px;
-font-size:14px;
-}
-
-.audit{
-display:none;
-margin-top:15px;
-max-height:200px;
-overflow:auto;
-font-size:13px;
-background:white;
-padding:10px;
-border-radius:6px;
-}
-
-/* IMPRESIÓN */
-
-@media print{
-
-body{
-background:white;
-padding:0;
-}
-
-.card,button,input,.radio-group{
-display:none;
-}
-
-#printArea{
-display:block;
-}
-
-}
-
-#printArea{
-display:none;
-font-family:Arial;
-}
-
-.print-title{
-font-size:18px;
-font-weight:bold;
-margin-bottom:12px;
-}
-
-.section{
-margin-top:16px;
-}
-
-</style>
-</head>
-
-<body>
-
-<div class="container">
-
-<div class="card">
-
-<h1>Calculadora de Plazos Administrativos</h1>
-
-<label>Fecha inicial</label>
-<input type="date" id="fechaInicio">
-
-<label>Cantidad de días</label>
-<input type="number" id="dias">
-
-<div class="radio-group">
-<label><input type="radio" name="tipo" value="corridos"> Corridos</label>
-<label><input type="radio" name="tipo" value="habiles" checked> Hábiles</label>
-</div>
-
-<button class="btn-calcular" onclick="calcular()">Calcular fecha</button>
-
-<div class="result">
-
-<div class="result-title">Fecha resultante</div>
-<div class="result-date" id="resultado">--/--/----</div>
-
-<div id="condicion"></div>
-
-<div class="detalle" id="detalle"></div>
-
-</div>
-
-<button class="btn-auditoria" onclick="toggleAuditoria()">Mostrar auditoría</button>
-
-<div class="audit" id="auditoria"></div>
-
-<button class="btn-print" onclick="imprimir()">Imprimir / Guardar PDF</button>
-
-</div>
-
-</div>
-
-<div id="printArea">
-
-<div class="print-title">
-Calculadora de Plazos Administrativos  
-Provincia de Mendoza – Argentina
-</div>
-
-<div class="section" id="printDatos"></div>
-
-<div class="section">
-<b>Resultado</b><br>
-<div id="printResultado"></div>
-</div>
-
-<div class="section">
-<b>Resumen de exclusiones</b><br>
-<div id="printResumen"></div>
-</div>
-
-<div class="section">
-<b>Detalle de auditoría</b><br>
-<div id="printAuditoria"></div>
-</div>
-
-</div>
-
-<script>
-
-const feriados=[
-"2025-01-01",
-"2025-03-24",
-"2025-04-02",
-"2025-05-01",
-"2025-05-25",
-"2025-06-20",
-"2025-07-09",
-"2025-07-25",
-"2025-12-08",
-"2025-12-25",
-
-"2026-01-01",
-"2026-03-24",
-"2026-04-02",
-"2026-05-01",
-"2026-05-25",
-"2026-06-20",
-"2026-07-09",
-"2026-07-25",
-"2026-12-08",
-"2026-12-25"
+// Lista de feriados nacionales y provinciales (Mendoza)
+const feriados = [
+    "2025-01-01", "2025-03-03", "2025-03-04", "2025-03-24", "2025-04-02", 
+    "2025-04-18", "2025-05-01", "2025-05-25", "2025-06-16", "2025-06-20", 
+    "2025-07-09", "2025-07-25", "2025-08-15", "2025-08-17", "2025-10-12", 
+    "2025-11-24", "2025-12-08", "2025-12-25",
+    "2026-01-01", "2026-03-23", "2026-03-24", "2026-04-02", "2026-04-03",
+    "2026-05-01", "2026-05-25", "2026-06-15", "2026-06-20", "2026-07-09",
+    "2026-07-25", "2026-08-17", "2026-10-12", "2026-11-23", "2026-12-08", 
+    "2026-12-25"
 ];
 
-const noLaborables=[
-"2025-12-24",
-"2025-12-31",
-"2026-12-24",
-"2026-12-31"
+const noLaborables = [
+    "2025-12-24", "2025-12-31", "2026-12-24", "2026-12-31"
 ];
 
-function esFeriado(f){
-let s=f.toISOString().split("T")[0];
-return feriados.includes(s);
+// Función para normalizar la fecha y evitar errores de zona horaria
+function parseFechaLocal(inputStr) {
+    if (!inputStr) return null;
+    let [y, m, d] = inputStr.split("-");
+    return new Date(y, m - 1, d);
 }
 
-function esNoLaborable(f){
-let s=f.toISOString().split("T")[0];
-return noLaborables.includes(s);
+function formatearFecha(fecha) {
+    return fecha.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
-function calcular(){
+function calcular() {
+    let inputFecha = document.getElementById("fechaInicio").value;
+    if (!inputFecha) return alert("Por favor, seleccione una fecha inicial.");
+    
+    let inicio = parseFechaLocal(inputFecha);
+    let dias = parseInt(document.getElementById("dias").value);
+    let tipo = document.querySelector('input[name="tipo"]:checked').value;
 
-let inicio=new Date(document.getElementById("fechaInicio").value);
-let dias=parseInt(document.getElementById("dias").value);
-let tipo=document.querySelector('input[name="tipo"]:checked').value;
+    if (isNaN(dias)) return alert("Por favor, ingrese la cantidad de días.");
 
-let fecha=new Date(inicio);
+    let fechaActual = new Date(inicio);
+    let cont = 0;
+    let sab = 0, dom = 0, fer = 0, nolab = 0;
+    let aud = [];
 
-let cont=0;
-let sab=0;
-let dom=0;
-let fer=0;
-let aud=[];
+    // Según la Ley de Procedimiento Administrativo, el plazo corre desde el día siguiente
+    while (cont < dias) {
+        fechaActual.setDate(fechaActual.getDate() + 1);
+        
+        let diaSemana = fechaActual.getDay(); // 0=Dom, 6=Sab
+        let stringFecha = fechaActual.toISOString().split('T')[0];
+        let fVisual = formatearFecha(fechaActual);
 
-while(cont<dias){
+        if (tipo === "corridos") {
+            cont++;
+            aud.push(`${fVisual} – contado (corrido)`);
+        } else {
+            // Lógica de Días Hábiles
+            if (diaSemana === 0) {
+                dom++;
+                aud.push(`${fVisual} – domingo (excluido)`);
+            } else if (diaSemana === 6) {
+                sab++;
+                aud.push(`${fVisual} – sábado (excluido)`);
+            } else if (feriados.includes(stringFecha)) {
+                fer++;
+                aud.push(`${fVisual} – feriado (excluido)`);
+            } else if (noLaborables.includes(stringFecha)) {
+                nolab++;
+                aud.push(`${fVisual} – asueto/no laborable (excluido)`);
+            } else {
+                cont++;
+                aud.push(`${fVisual} – contado`);
+            }
+        }
+    }
 
-fecha.setDate(fecha.getDate()+1);
+    // Mostrar resultados
+    const resultadoTexto = formatearFecha(fechaActual);
+    document.getElementById("resultado").innerText = resultadoTexto;
+    document.getElementById("condicion").innerText = `${dias} días ${tipo}`;
+    
+    let detalleHTML = `Sábados: ${sab} | Domingos: ${dom}<br>Feriados/Asuetos: ${fer + nolab}`;
+    document.getElementById("detalle").innerHTML = detalleHTML;
+    document.getElementById("auditoria").innerHTML = aud.join("<br>");
 
-let dia=fecha.getDay();
-let texto=fecha.toLocaleDateString();
-
-if(tipo==="corridos"){
-cont++;
-aud.push(texto+" – contado");
-continue;
+    // Actualizar área de impresión
+    document.getElementById("printDatos").innerHTML = `Fecha inicial: ${formatearFecha(inicio)}<br>Plazo: ${dias} días ${tipo}`;
+    document.getElementById("printResultado").innerText = resultadoTexto;
+    document.getElementById("printResumen").innerHTML = detalleHTML;
+    document.getElementById("printAuditoria").innerHTML = aud.join("<br>");
 }
 
-if(esFeriado(fecha)){
-fer++;
-aud.push(texto+" – feriado (excluido)");
-continue;
+function toggleAuditoria() {
+    let a = document.getElementById("auditoria");
+    a.style.display = (a.style.display === "block") ? "none" : "block";
 }
 
-if(esNoLaborable(fecha)){
-aud.push(texto+" – no laborable (excluido)");
-continue;
+function imprimir() {
+    window.print();
 }
-
-if(dia===6){
-sab++;
-aud.push(texto+" – sábado (excluido)");
-continue;
-}
-
-if(dia===0){
-dom++;
-aud.push(texto+" – domingo (excluido)");
-continue;
-}
-
-cont++;
-aud.push(texto+" – contado");
-
-}
-
-document.getElementById("resultado").innerText=fecha.toLocaleDateString();
-
-document.getElementById("condicion").innerText=
-dias+" días "+tipo;
-
-document.getElementById("detalle").innerHTML=
-"Feriados: "+fer+"<br>"+
-"Sábados: "+sab+"<br>"+
-"Domingos: "+dom;
-
-document.getElementById("auditoria").innerHTML=aud.join("<br>");
-
-document.getElementById("printDatos").innerHTML=
-"Fecha inicial: "+inicio.toLocaleDateString()+"<br>"+
-"Tipo de plazo: "+tipo+"<br>"+
-"Cantidad de días: "+dias;
-
-document.getElementById("printResultado").innerText=
-fecha.toLocaleDateString();
-
-document.getElementById("printResumen").innerHTML=
-"Feriados: "+fer+"<br>"+
-"Sábados: "+sab+"<br>"+
-"Domingos: "+dom;
-
-document.getElementById("printAuditoria").innerHTML=
-aud.join("<br>");
-
-}
-
-function toggleAuditoria(){
-let a=document.getElementById("auditoria");
-a.style.display = a.style.display==="block" ? "none" : "block";
-}
-
-function imprimir(){
-window.print();
-}
-
-</script>
-
-</body>
-</html>
