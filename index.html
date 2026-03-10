@@ -3,39 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculadora de Plazos Administrativos - Mendoza</title>
+    <title>Calculadora de Plazos - ATE Mendoza</title>
     <style>
-        /* ESTILOS PARA PANTALLA */
-        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f4f4f4; display: flex; justify-content: center; padding: 20px; color: #333; }
-        .container { width: 100%; max-width: 450px; }
-        .card { background: #F0F9CF; padding: 25px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border: 1px solid #d4e3a3; }
-        h1 { text-align: center; font-size: 1.4rem; margin-bottom: 20px; color: #1b4332; border-bottom: 2px solid #38B000; padding-bottom: 10px; }
-        label { font-size: 0.9rem; font-weight: bold; display: block; margin-top: 15px; }
-        input { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #bccca3; margin-top: 5px; font-size: 1rem; box-sizing: border-box; }
-        .radio-group { margin-top: 15px; display: flex; gap: 20px; background: #e2efb6; padding: 10px; border-radius: 8px; }
-        .radio-group label { margin-top: 0; cursor: pointer; display: flex; align-items: center; gap: 5px; }
-        button { width: 100%; padding: 14px; border: none; border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer; margin-top: 15px; transition: 0.3s; }
-        .btn-calcular { background: #38B000; color: white; }
-        .btn-calcular:hover { background: #2d8a00; transform: translateY(-1px); }
-        .btn-auditoria { background: #ffffff; color: #38B000; border: 2px solid #38B000; margin-top: 20px; }
-        .btn-print { background: #1a1a1a; color: white; }
-        .btn-print:hover { background: #000; }
+        :root { --primary: #38B000; --dark: #1b4332; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #fdfdfd; display: flex; justify-content: center; padding: 20px; color: #333; }
+        .container { width: 100%; max-width: 480px; }
+        .card { background: #F0F9CF; padding: 30px; border-radius: 16px; box-shadow: 0 8px 30px rgba(0,0,0,0.1); border: 1px solid #d4e3a3; }
+        h1 { text-align: center; font-size: 1.5rem; margin-bottom: 25px; color: #000; font-weight: 800; text-transform: uppercase; }
         
-        .result { margin-top: 25px; background: #ffffff; padding: 20px; border-radius: 10px; border-left: 5px solid #38B000; }
-        .result-title { font-size: 0.85rem; color: #666; text-transform: uppercase; letter-spacing: 1px; }
-        .result-date { font-size: 2rem; font-weight: 800; color: #1b4332; margin: 5px 0; }
-        .detalle { font-size: 0.9rem; color: #444; line-height: 1.6; }
-        .audit { display: none; margin-top: 15px; max-height: 250px; overflow-y: auto; font-size: 0.85rem; background: #fcfcfc; padding: 15px; border-radius: 8px; border: 1px solid #eee; }
+        .input-group { margin-bottom: 15px; }
+        label { font-size: 0.9rem; font-weight: bold; display: block; margin-bottom: 5px; color: var(--dark); }
+        input[type="date"], input[type="number"] { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #bccca3; font-size: 1rem; box-sizing: border-box; }
+        
+        .radio-group { display: flex; gap: 15px; background: rgba(255,255,255,0.5); padding: 15px; border-radius: 8px; margin: 20px 0; border: 1px dashed var(--primary); }
+        .radio-group label { margin: 0; cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: normal; }
+        
+        button { width: 100%; padding: 15px; border: none; border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer; transition: 0.2s; margin-bottom: 10px; }
+        .btn-calcular { background: var(--primary); color: white; box-shadow: 0 4px 0 #2d8a00; }
+        .btn-calcular:active { transform: translateY(3px); box-shadow: none; }
+        
+        .btn-auditoria { background: white; color: var(--primary); border: 2px solid var(--primary); margin-top: 10px; }
+        .btn-print { background: #000; color: white; }
+        
+        .result { margin-top: 25px; background: #fff; padding: 20px; border-radius: 12px; border-left: 6px solid var(--primary); display: none; }
+        .result-title { font-size: 0.8rem; color: #666; text-transform: uppercase; }
+        .result-date { font-size: 2.2rem; font-weight: 900; color: #000; margin: 5px 0; }
+        
+        .audit { display: none; margin-top: 15px; max-height: 300px; overflow-y: auto; font-size: 0.85rem; background: #fff; padding: 15px; border-radius: 8px; border: 1px solid #ddd; }
+        ul { padding-left: 20px; margin: 0; }
+        li { margin-bottom: 5px; }
 
-        /* ESTILOS PARA IMPRESIÓN (PDF) */
         @media print {
+            .no-print, button, .radio-group, input, label { display: none !important; }
             body { background: white; padding: 0; }
-            .card { box-shadow: none; border: 1px solid #ccc; width: 100%; max-width: 100%; background: white !important; }
-            button, .radio-group, input, label, .btn-auditoria { display: none !important; }
-            .audit { display: block !important; max-height: none; overflow: visible; border: 1px solid #eee; }
-            .result { border: 1px solid #ccc; background: #f9f9f9 !important; }
-            h1::after { content: " - Reporte de Cálculo"; }
-            .no-print { display: none; }
+            .card { box-shadow: none; border: none; width: 100%; background: white !important; }
+            .result { display: block !important; border: 1px solid #000; margin-bottom: 20px; }
+            .audit { display: block !important; max-height: none; overflow: visible; }
         }
     </style>
 </head>
@@ -43,39 +46,44 @@
 
 <div class="container">
     <div class="card">
-        <h1>Plazos Administrativos</h1>
+        <h1>Calculadora ATE</h1>
 
         <div class="no-print">
-            <label>Fecha de notificación</label>
-            <input type="date" id="fechaInicio">
+            <div class="input-group">
+                <label>Fecha de Notificación</label>
+                <input type="date" id="fechaInicio">
+            </div>
 
-            <label>Cantidad de días</label>
-            <input type="number" id="dias" value="15">
+            <div class="input-group">
+                <label>Plazo (en días)</label>
+                <input type="number" id="dias" placeholder="Ej: 15">
+            </div>
 
             <div class="radio-group">
                 <label><input type="radio" name="tipo" value="corridos"> Corridos</label>
                 <label><input type="radio" name="tipo" value="habiles" checked> Hábiles</label>
             </div>
 
-            <button class="btn-calcular" onclick="calcular()">CALCULAR VENCIMIENTO</button>
+            <button class="btn-calcular" onclick="ejecutarCalculo()">CALCULAR VENCIMIENTO</button>
         </div>
 
-        <div class="result" id="resultadoContenedor" style="display:none;">
-            <div class="result-title">Vencimiento:</div>
-            <div class="result-date" id="resultado">--/--/----</div>
-            <div id="condicion" style="font-weight: bold; color: #38B000;"></div>
-            <div class="detalle" id="detalle"></div>
+        <div class="result" id="panelResultado">
+            <div class="result-title">Fecha de Vencimiento:</div>
+            <div class="result-date" id="txtResultado">--/--/----</div>
+            <div id="txtDetalle" style="font-size: 0.9rem; line-height: 1.4;"></div>
         </div>
 
-        <button class="btn-auditoria no-print" id="btnAuditoria" style="display:none;" onclick="toggleAuditoria()">Ver paso a paso</button>
-        <div class="audit" id="auditoria"></div>
-
-        <button class="btn-print no-print" id="btnPrint" style="display:none;" onclick="window.print()">Imprimir / Guardar PDF</button>
+        <div id="controlesExtra" style="display:none;">
+            <button class="btn-auditoria no-print" onclick="toggleAudit()">Ver detalle paso a paso</button>
+            <div class="audit" id="panelAudit"></div>
+            <button class="btn-print no-print" onclick="window.print()">Imprimir o Guardar PDF</button>
+        </div>
     </div>
 </div>
 
 <script>
-    const feriados = [
+    // Feriados actualizados Mendoza 2025-2026
+    const FERIADOS = [
         "2025-01-01", "2025-03-03", "2025-03-04", "2025-03-24", "2025-04-02", "2025-04-18",
         "2025-05-01", "2025-05-25", "2025-06-16", "2025-06-20", "2025-07-09", "2025-07-25",
         "2025-08-15", "2025-08-17", "2025-10-12", "2025-11-24", "2025-12-08", "2025-12-25",
@@ -84,55 +92,70 @@
         "2026-10-12", "2026-11-23", "2026-12-08", "2026-12-25"
     ];
 
-    function parseFechaLocal(s) {
-        let parts = s.split('-');
-        return new Date(parts[0], parts[1]-1, parts[2]);
-    }
-
-    function calcular() {
-        const inputF = document.getElementById("fechaInicio").value;
-        const inputD = document.getElementById("dias").value;
+    function ejecutarCalculo() {
+        const fInput = document.getElementById("fechaInicio").value;
+        const dInput = document.getElementById("dias").value;
         const tipo = document.querySelector('input[name="tipo"]:checked').value;
 
-        if (!inputF || !inputD) return alert("Faltan datos");
+        if (!fInput || !dInput || dInput <= 0) {
+            alert("⚠️ Por favor, ingresa una fecha válida y una cantidad de días mayor a 0.");
+            return;
+        }
 
-        let fecha = parseFechaLocal(inputF);
-        let dias = parseInt(inputD);
-        let cont = 0;
-        let sab = 0, dom = 0, fer = 0;
-        let log = [];
+        // Crear fecha local sin desfase de zona horaria
+        let [y, m, d] = fInput.split('-');
+        let fecha = new Date(y, m - 1, d);
+        let fechaNotif = new Date(y, m - 1, d);
+        
+        let diasASumar = parseInt(dInput);
+        let cont = 0, sab = 0, dom = 0, fer = 0;
+        let logs = [];
 
-        while (cont < dias) {
+        while (cont < diasASumar) {
             fecha.setDate(fecha.getDate() + 1);
-            let ds = fecha.getDay();
+            let diaSemana = fecha.getDay(); // 0=Dom, 6=Sab
             let iso = fecha.toISOString().split('T')[0];
             let label = fecha.toLocaleDateString('es-AR');
 
             if (tipo === "corridos") {
                 cont++;
-                log.push(`<li>${label}: Contado</li>`);
+                logs.push(`<li>${label}: Contado (Corrido)</li>`);
             } else {
-                if (ds === 0) { dom++; log.push(`<li>${label}: Domingo (Omitido)</li>`); }
-                else if (ds === 6) { sab++; log.push(`<li>${label}: Sábado (Omitido)</li>`); }
-                else if (feriados.includes(iso)) { fer++; log.push(`<li>${label}: Feriado (Omitido)</li>`); }
-                else { cont++; log.push(`<li>${label}: Contado</li>`); }
+                if (diaSemana === 0) {
+                    dom++;
+                    logs.push(`<li>${label}: Domingo (Omitido)</li>`);
+                } else if (diaSemana === 6) {
+                    sab++;
+                    logs.push(`<li>${label}: Sábado (Omitido)</li>`);
+                } else if (FERIADOS.includes(iso)) {
+                    fer++;
+                    logs.push(`<li>${label}: Feriado (Omitido)</li>`);
+                } else {
+                    cont++;
+                    logs.push(`<li>${label}: Contado (Hábil)</li>`);
+                }
             }
         }
 
-        // Mostrar resultados y botones
-        document.getElementById("resultadoContenedor").style.display = "block";
-        document.getElementById("btnAuditoria").style.display = "block";
-        document.getElementById("btnPrint").style.display = "block";
+        // Mostrar resultados
+        document.getElementById("panelResultado").style.display = "block";
+        document.getElementById("controlesExtra").style.display = "block";
         
-        document.getElementById("resultado").innerText = fecha.toLocaleDateString('es-AR');
-        document.getElementById("condicion").innerText = `${inputD} días ${tipo}`;
-        document.getElementById("detalle").innerHTML = `<b>Desglose:</b><br>Sábados: ${sab} | Domingos: ${dom} | Feriados: ${fer}`;
-        document.getElementById("auditoria").innerHTML = `<p><b>Detalle del cálculo (notificado el ${parseFechaLocal(inputF).toLocaleDateString('es-AR')}):</b></p><ul>${log.join("")}</ul>`;
+        document.getElementById("txtResultado").innerText = fecha.toLocaleDateString('es-AR');
+        document.getElementById("txtDetalle").innerHTML = `
+            <strong>Tipo:</strong> ${diasASumar} días ${tipo}<br>
+            <strong>Excluidos:</strong> ${sab} Sáb, ${dom} Dom, ${fer} Feriados.
+        `;
+        
+        document.getElementById("panelAudit").innerHTML = `
+            <p><strong>Cómputo desde la notificación (${fechaNotif.toLocaleDateString('es-AR')}):</strong></p>
+            <ul>${logs.join('')}</ul>
+        `;
     }
 
-    function toggleAuditoria() {
-        let div = document.getElementById("auditoria");
-        div.style.display = (div.style.display === "block") ? "none" : "block";
+    function toggleAudit() {
+        const p = document.getElementById("panelAudit");
+        p.style.display = (p.style.display === "block") ? "none" : "block";
     }
 </script>
 
