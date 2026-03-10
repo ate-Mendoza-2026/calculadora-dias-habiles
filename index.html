@@ -1,5 +1,97 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Plazos Administrativos - Mendoza</title>
+    <style>
+        :root { --primary: #38B000; --dark: #1b4332; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #fdfdfd; display: flex; justify-content: center; padding: 20px; color: #333; }
+        .container { width: 100%; max-width: 500px; }
+        .card { background: #F0F9CF; padding: 30px; border-radius: 16px; box-shadow: 0 8px 30px rgba(0,0,0,0.1); border: 1px solid #d4e3a3; }
+        h1 { text-align: center; font-size: 1.3rem; margin-bottom: 25px; color: #000; font-weight: 800; text-transform: uppercase; line-height: 1.2; }
+        
+        .input-group { margin-bottom: 15px; }
+        label { font-size: 0.85rem; font-weight: bold; display: block; margin-bottom: 5px; color: var(--dark); }
+        select, input[type="date"], input[type="number"] { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #bccca3; font-size: 1rem; box-sizing: border-box; background: white; }
+        
+        .radio-group { display: flex; gap: 15px; background: rgba(255,255,255,0.5); padding: 15px; border-radius: 8px; margin: 20px 0; border: 1px dashed var(--primary); }
+        .radio-group label { margin: 0; cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: normal; font-size: 0.9rem; }
+        
+        button { width: 100%; padding: 15px; border: none; border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer; transition: 0.2s; margin-bottom: 10px; }
+        .btn-calcular { background: var(--primary); color: white; box-shadow: 0 4px 0 #2d8a00; }
+        .btn-calcular:active { transform: translateY(3px); box-shadow: none; }
+        
+        .btn-auditoria { background: white; color: var(--primary); border: 2px solid var(--primary); margin-top: 10px; }
+        .btn-print { background: #000; color: white; margin-top: 5px; }
+        
+        .result { margin-top: 25px; background: #fff; padding: 20px; border-radius: 12px; border-left: 6px solid var(--primary); display: none; }
+        .result-title { font-size: 0.8rem; color: #666; text-transform: uppercase; }
+        .result-date { font-size: 2.2rem; font-weight: 900; color: #000; margin: 5px 0; }
+        
+        .audit { display: none; margin-top: 15px; max-height: 350px; overflow-y: auto; font-size: 0.85rem; background: #fff; padding: 15px; border-radius: 8px; border: 1px solid #ddd; }
+        ul { padding-left: 20px; margin: 0; }
+        li { margin-bottom: 6px; border-bottom: 1px solid #f0f0f0; padding-bottom: 2px; list-style: none; }
+        .excluido { color: #d90429; font-weight: 500; }
+        .contado { color: #38B000; font-weight: 500; }
+
+        @media print {
+            .no-print, button, .radio-group, input, label, select { display: none !important; }
+            body { background: white; padding: 0; }
+            .card { box-shadow: none; border: none; width: 100%; background: white !important; }
+            .result { display: block !important; border: 1px solid #ccc; margin-bottom: 20px; }
+            .audit { display: block !important; max-height: none; overflow: visible; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="card">
+        <h1>Calculadora de Plazos Administrativos - Mendoza</h1>
+
+        <div class="no-print">
+            <div class="input-group">
+                <label>Ámbito del cálculo (Feriados)</label>
+                <select id="jurisdiccion">
+                    <option value="mendoza">Provincia de Mendoza (Incluye 25 de Julio)</option>
+                    <option value="nacional">Nacional (Argentina)</option>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <label>Fecha de Notificación</label>
+                <input type="date" id="fechaInicio">
+            </div>
+
+            <div class="input-group">
+                <label>Plazo (en días)</label>
+                <input type="number" id="dias" placeholder="Ej: 15">
+            </div>
+
+            <div class="radio-group">
+                <label><input type="radio" name="tipo" value="corridos"> Corridos</label>
+                <label><input type="radio" name="tipo" value="habiles" checked> Hábiles</label>
+            </div>
+
+            <button class="btn-calcular" onclick="ejecutarCalculo()">CALCULAR VENCIMIENTO</button>
+        </div>
+
+        <div class="result" id="panelResultado">
+            <div class="result-title">Fecha de Vencimiento:</div>
+            <div class="result-date" id="txtResultado">--/--/----</div>
+            <div id="txtDetalle" style="font-size: 0.9rem; line-height: 1.4; margin-top: 10px;"></div>
+        </div>
+
+        <div id="controlesExtra" style="display:none;">
+            <button class="btn-auditoria no-print" onclick="toggleAudit()">Ver detalle paso a paso</button>
+            <div class="audit" id="panelAudit"></div>
+            <button class="btn-print no-print" onclick="window.print()">Imprimir o Guardar PDF</button>
+        </div>
+    </div>
+</div>
+
 <script>
-    // Base de datos de feriados actualizada con la lista oficial 2025-2026
     const FERIADOS_DATA = {
         // --- AÑO 2025 ---
         "2025-01-01": { n: "Año Nuevo", t: "nac" },
@@ -20,25 +112,25 @@
         "2025-12-08": { n: "Inmaculada Concepción", t: "nac" },
         "2025-12-25": { n: "Navidad", t: "nac" },
 
-        // --- AÑO 2026 (Según lista oficial compartida) ---
+        // --- AÑO 2026 (Oficiales compartidos) ---
         "2026-01-01": { n: "Año Nuevo", t: "nac" },
         "2026-02-16": { n: "Carnaval", t: "nac" },
         "2026-02-17": { n: "Carnaval", t: "nac" },
-        "2026-03-23": { n: "Feriado Puente Turístico", t: "nac" },
+        "2026-03-23": { n: "Día No Laborable (Puente)", t: "nac" },
         "2026-03-24": { n: "Día de la Memoria", t: "nac" },
         "2026-04-02": { n: "Día de Malvinas", t: "nac" },
         "2026-04-03": { n: "Viernes Santo", t: "nac" },
         "2026-05-01": { n: "Día del Trabajador", t: "nac" },
         "2026-05-25": { n: "Revolución de Mayo", t: "nac" },
-        "2026-06-15": { n: "Paso a Güemes (Trasl.)", t: "nac" },
+        "2026-06-15": { n: "Paso a Güemes (17/06)", t: "nac" },
         "2026-06-20": { n: "Día de la Bandera", t: "nac" },
         "2026-07-09": { n: "Día de la Independencia", t: "nac" },
-        "2026-07-10": { n: "Feriado Puente Turístico", t: "nac" },
-        "2026-07-25": { n: "Santo Patrono Santiago", t: "mza" }, // Feriado Provincial Mendoza
+        "2026-07-10": { n: "Día No Laborable (Puente)", t: "nac" },
+        "2026-07-25": { n: "Santo Patrono Santiago", t: "mza" },
         "2026-08-17": { n: "Paso a San Martín", t: "nac" },
         "2026-10-12": { n: "Día de la Diversidad Cultural", t: "nac" },
         "2026-11-23": { n: "Día de la Soberanía Nacional", t: "nac" },
-        "2026-12-07": { n: "Feriado Puente Turístico", t: "nac" },
+        "2026-12-07": { n: "Día No Laborable (Puente)", t: "nac" },
         "2026-12-08": { n: "Inmaculada Concepción", t: "nac" },
         "2026-12-25": { n: "Navidad", t: "nac" }
     };
@@ -105,3 +197,6 @@
         p.style.display = (p.style.display === "block") ? "none" : "block";
     }
 </script>
+
+</body>
+</html>
